@@ -98,7 +98,8 @@ cat >"$DATA/applications/puntero.desktop" <<EOF
 [Desktop Entry]
 Version=1.0
 Name=Puntero
-Comment=Controla tus ratones y teclados Logitech
+Comment=Configure your Logitech mice and keyboards
+Comment[es]=Controla tus ratones y teclados Logitech
 Exec=$BIN/puntero
 Icon=input-mouse
 Terminal=false

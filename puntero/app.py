@@ -4,6 +4,7 @@
 import json
 import os
 import shutil
+import subprocess
 import sys
 
 from pathlib import Path
@@ -16,7 +17,7 @@ from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
 
 from evdev import ecodes  # noqa: E402
 
-from puntero.i18n import KEY_NAMES, code_label, key_label, localize, text_label  # noqa: E402
+from puntero.i18n import KEY_NAMES, LANGUAGES, _, code_label, key_label, key_name, language_choice, localize, set_language_choice, text_label  # noqa: E402
 
 APP_ID = "ve.puntero.Puntero"
 ROOT = Path(__file__).resolve().parent
@@ -80,16 +81,16 @@ CHARGING_TEXT = {
 def battery_summary(b):
     """Devuelve (fracción 0..1 o None, texto corto)."""
     if not b:
-        return None, "Batería desconocida"
+        return None, _("Batería desconocida")
     if b.get("level") is not None:
         frac, text = b["level"] / 100, f"{b['level']} %"
     elif b.get("approx") in BATTERY_APPROX:
         label, pct = BATTERY_APPROX[b["approx"]]
-        frac, text = pct / 100, label
+        frac, text = pct / 100, _(label)
     else:
-        return None, "Batería desconocida"
+        return None, _("Batería desconocida")
     if b.get("charging"):
-        text += " · " + CHARGING_TEXT.get(b.get("status"), "Cargando")
+        text += " · " + _(CHARGING_TEXT.get(b.get("status"), "Cargando"))
     return frac, text
 
 
@@ -257,12 +258,12 @@ class HostRow(ChoiceRow):
         if self.syncing or not (0 <= i < len(self.ids)) or self.ids[i] == self.current:
             return
         dialog = Adw.AlertDialog(
-            heading=f"¿Pasar el ratón a «{self.choice_labels[i].split(' · ')[-1]}»?",
-            body="Dejará de funcionar en este equipo. Para volver, pulsa el botón Easy-Switch "
-            "de la parte de abajo del ratón hasta elegir este canal.",
+            heading=_("¿Pasar el ratón a «{host}»?").format(host=self.choice_labels[i].split(" · ")[-1]),
+            body=_("Dejará de funcionar en este equipo. Para volver, pulsa el botón Easy-Switch "
+                   "de la parte de abajo del ratón hasta elegir este canal."),
         )
-        dialog.add_response("cancel", "Cancelar")
-        dialog.add_response("switch", "Cambiar")
+        dialog.add_response("cancel", _("Cancelar"))
+        dialog.add_response("switch", _("Cambiar"))
         dialog.set_response_appearance("switch", Adw.ResponseAppearance.DESTRUCTIVE)
         dialog.set_close_response("cancel")
         dialog.connect("response", self._on_response, i)
@@ -473,13 +474,13 @@ COMMAND_CANDIDATES = (
 
 def command_presets():
     """Solo los comandos que existen en este sistema (p. ej. los de Omarchy si está instalado)."""
-    return [(title, cmd) for title, cmd, needs in COMMAND_CANDIDATES if shutil.which(needs)]
+    return [(_(title), cmd) for title, cmd, needs in COMMAND_CANDIDATES if shutil.which(needs)]
 
 
 def keyval_label(keyval):
     name = Gdk.keyval_name(Gdk.keyval_to_lower(keyval)) or "?"
     if name in KEY_NAMES:
-        return KEY_NAMES[name]
+        return key_label(name)
     if len(name) == 1:
         return name.upper()
     return Gtk.accelerator_get_label(Gdk.keyval_to_lower(keyval), 0) or name
@@ -504,17 +505,17 @@ def keycaps(names, big=False):
 def button_summary(b):
     action = b.get("action")
     if action and action["type"] == "keys":
-        return f"Atajo: {action['label']}"
+        return _("Atajo: {label}").format(label=action["label"])
     if action and action["type"] == "command":
-        return f"Comando: {action['label']}"
+        return _("Comando: {label}").format(label=action["label"])
     if action and action["type"] == "text":
-        return f"Escribe: «{action['label']}»"
+        return _("Escribe: «{label}»").format(label=action["label"])
     if action and action["type"] == "dpi_cycle":
-        return f"Ciclo de DPI: {action['label']}"
+        return _("Ciclo de DPI: {label}").format(label=action["label"])
     if b.get("remap") is not None and b["remap"] != b["cid"]:
         label = next((c["label"] for c in b["remap_choices"] if c["id"] == b["remap"]), str(b["remap"]))
-        return f"Funciona como: {label}"
-    return "Función original"
+        return _("Funciona como: {label}").format(label=label)
+    return _("Función original")
 
 
 class ButtonRow:
@@ -535,7 +536,7 @@ class ButtonRow:
         if action and action["type"] == "keys":
             names = action.get("names") or [code_label(c) for c in action["codes"]]
             self.caps.append(keycaps(names))
-            self.widget.set_subtitle("Atajo de teclado")
+            self.widget.set_subtitle(_("Atajo de teclado"))
         else:
             self.widget.set_subtitle(button_summary(button))
 
@@ -552,9 +553,9 @@ class ButtonDialog(Adw.Dialog):
         action = button.get("action")
 
         header = Adw.HeaderBar(show_start_title_buttons=False, show_end_title_buttons=False)
-        cancel = Gtk.Button(label="Cancelar")
+        cancel = Gtk.Button(label=_("Cancelar"))
         cancel.connect("clicked", lambda _b: self.close())
-        self.save_button = Gtk.Button(label="Guardar")
+        self.save_button = Gtk.Button(label=_("Guardar"))
         self.save_button.add_css_class("suggested-action")
         self.save_button.connect("clicked", self._save)
         header.pack_start(cancel)
@@ -564,13 +565,13 @@ class ButtonDialog(Adw.Dialog):
         self.tabs = Adw.ToggleGroup(halign=Gtk.Align.CENTER, margin_top=6, margin_bottom=12)
         self.tabs.add_css_class("round")
         self.stack = Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE, vhomogeneous=False)
-        self._add_tab("default", "Original", self._page_default())
+        self._add_tab("default", _("Original"), self._page_default())
         if button["remap_choices"]:
-            self._add_tab("remap", "Otro botón", self._page_remap())
+            self._add_tab("remap", _("Otro botón"), self._page_remap())
         if button["can_divert"]:
-            self._add_tab("keys", "Teclado", self._page_keys())
-            self._add_tab("text", "Texto", self._page_text())
-            self._add_tab("command", "Comando", self._page_command())
+            self._add_tab("keys", _("Teclado"), self._page_keys())
+            self._add_tab("text", _("Texto"), self._page_text())
+            self._add_tab("command", _("Comando"), self._page_command())
             self.dpi_choices = self._dpi_choices()
             if self.dpi_choices:
                 self._add_tab("dpi", "DPI", self._page_dpi())
@@ -630,14 +631,14 @@ class ButtonDialog(Adw.Dialog):
 
     def _page_default(self):
         original = next((c["label"] for c in self.button["remap_choices"] if c["id"] == self.button["cid"]), None)
-        text = f"El botón hace su función de fábrica: <b>{GLib.markup_escape_text(original)}</b>." if original \
-            else "El botón hace su función de fábrica."
+        text = _("El botón hace su función de fábrica: <b>{original}</b>.").format(
+            original=GLib.markup_escape_text(original)) if original else _("El botón hace su función de fábrica.")
         label = Gtk.Label(label=text, use_markup=True, wrap=True, margin_top=24, justify=Gtk.Justification.CENTER)
         label.add_css_class("dim-label")
         return label
 
     def _page_remap(self):
-        group = Adw.PreferencesGroup(title="Que funcione como…")
+        group = Adw.PreferencesGroup(title=_("Que funcione como…"))
         self.remap_checks = {}
         first = None
         for c in self.button["remap_choices"]:
@@ -684,9 +685,9 @@ class ButtonDialog(Adw.Dialog):
             mods.append(t)
         page.append(mods)
 
-        group = Adw.PreferencesGroup(title="Atajos frecuentes")
+        group = Adw.PreferencesGroup(title=_("Atajos frecuentes"))
         for title, names in SHORTCUT_PRESETS:
-            row = Adw.ActionRow(title=title, activatable=True)
+            row = Adw.ActionRow(title=_(title), activatable=True)
             row.add_suffix(keycaps([key_label(n) for n in names]))
             row.connect("activated", lambda _r, names=names: self._set_shortcut([ecodes.ecodes[n] for n in names]))
             group.add(row)
@@ -697,9 +698,9 @@ class ButtonDialog(Adw.Dialog):
     def _page_text(self):
         page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18)
         group = Adw.PreferencesGroup(
-            title="Texto que se escribe",
-            description="Al pulsar el botón se escribe este texto donde esté el cursor: un saludo, "
-                        "una firma, tu correo… Puede tener varias líneas.")
+            title=_("Texto que se escribe"),
+            description=_("Al pulsar el botón se escribe este texto donde esté el cursor: un saludo, "
+                          "una firma, tu correo… Puede tener varias líneas."))
         self.text_buffer = Gtk.TextBuffer()
         self.text_buffer.connect("changed", lambda *_: self._refresh())
         view = Gtk.TextView(buffer=self.text_buffer, wrap_mode=Gtk.WrapMode.WORD_CHAR,
@@ -712,8 +713,8 @@ class ButtonDialog(Adw.Dialog):
         page.append(group)
         if not shutil.which("wtype") and not shutil.which("xdotool"):
             hint = Gtk.Label(wrap=True, xalign=0,
-                             label="Para escribir acentos, ñ y símbolos instala wtype (Wayland) o xdotool (X11). "
-                                   "Sin ellos solo se escriben letras sin acento, números y espacios.")
+                             label=_("Para escribir acentos, ñ y símbolos instala wtype (Wayland) o xdotool (X11). "
+                                     "Sin ellos solo se escriben letras sin acento, números y espacios."))
             hint.add_css_class("dim-label")
             hint.add_css_class("caption")
             page.append(hint)
@@ -725,12 +726,12 @@ class ButtonDialog(Adw.Dialog):
 
     def _page_command(self):
         page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18)
-        entry_group = Adw.PreferencesGroup(description="Se ejecuta al pulsar el botón, como en una terminal.")
-        self.command_row = Adw.EntryRow(title="Comando")
+        entry_group = Adw.PreferencesGroup(description=_("Se ejecuta al pulsar el botón, como en una terminal."))
+        self.command_row = Adw.EntryRow(title=_("Comando"))
         self.command_row.connect("changed", lambda *_: self._refresh())
         entry_group.add(self.command_row)
         page.append(entry_group)
-        group = Adw.PreferencesGroup(title="Comandos frecuentes")
+        group = Adw.PreferencesGroup(title=_("Comandos frecuentes"))
         presets = command_presets()
         group.set_visible(bool(presets))
         for title, command in presets:
@@ -753,10 +754,10 @@ class ButtonDialog(Adw.Dialog):
     def _page_dpi(self):
         page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18)
         self.dpi_group = Adw.PreferencesGroup(
-            title="Puntos de DPI",
-            description="Cada pulsación del botón pasa al siguiente punto. Después del último vuelve al primero.",
+            title=_("Puntos de DPI"),
+            description=_("Cada pulsación del botón pasa al siguiente punto. Después del último vuelve al primero."),
         )
-        add = Gtk.Button(icon_name="list-add-symbolic", valign=Gtk.Align.CENTER, tooltip_text="Añadir un punto")
+        add = Gtk.Button(icon_name="list-add-symbolic", valign=Gtk.Align.CENTER, tooltip_text=_("Añadir un punto"))
         add.add_css_class("flat")
         add.connect("clicked", lambda _b: self._add_dpi_row(self._suggest_dpi()))
         self.dpi_group.set_header_suffix(add)
@@ -771,7 +772,7 @@ class ButtonDialog(Adw.Dialog):
             self._add_dpi_row(v)
         page.append(self.dpi_group)
         note = Gtk.Label(
-            label="Al cambiar verás el DPI en pantalla. Puedes tener entre 2 y 5 puntos.",
+            label=_("Al cambiar verás el DPI en pantalla. Puedes tener entre 2 y 5 puntos."),
             wrap=True, xalign=0,
         )
         note.add_css_class("dim-label")
@@ -793,7 +794,7 @@ class ButtonDialog(Adw.Dialog):
         row = Adw.SpinRow.new_with_range(lo, hi, step)
         row.set_value(self._nearest_dpi(value))
         row.connect("notify::value", lambda *_: self._refresh_dpi())
-        remove = Gtk.Button(icon_name="user-trash-symbolic", valign=Gtk.Align.CENTER, tooltip_text="Quitar este punto")
+        remove = Gtk.Button(icon_name="user-trash-symbolic", valign=Gtk.Align.CENTER, tooltip_text=_("Quitar este punto"))
         remove.add_css_class("flat")
         remove.connect("clicked", lambda _b: self._remove_dpi_row(row))
         row.add_suffix(remove)
@@ -811,7 +812,7 @@ class ButtonDialog(Adw.Dialog):
 
     def _refresh_dpi(self):
         for i, row in enumerate(self.dpi_rows, 1):
-            row.set_title(f"Punto {i}")
+            row.set_title(_("Punto {n}").format(n=i))
             row.remove_button.set_sensitive(len(self.dpi_rows) > 2)
         self.dpi_add.set_sensitive(len(self.dpi_rows) < 5)
         self._refresh()
@@ -835,7 +836,7 @@ class ButtonDialog(Adw.Dialog):
         if self.key is None:
             return None
         pairs = [(code, name) for _m, code, name in MODIFIER_CODES if code in self.mods] + [self.key]
-        return [c for c, _ in pairs], [n for _, n in pairs]
+        return [c for c, _n in pairs], [n for _c, n in pairs]
 
     def _show_shortcut(self, live_mods=None):
         if not hasattr(self, "keycaps_box"):
@@ -847,13 +848,13 @@ class ButtonDialog(Adw.Dialog):
             child = nxt
         if self.capturing:
             names = [name for _m, code, name in MODIFIER_CODES if code in (live_mods or set())]
-            self.capture_hint.set_label("Pulsa la combinación… (Esc para cancelar)")
+            self.capture_hint.set_label(_("Pulsa la combinación… (Esc para cancelar)"))
             self.keycaps_box.append(keycaps(names + ["…"], big=True))
         elif self.key is not None:
-            self.capture_hint.set_label("Haz clic para grabar otra")
+            self.capture_hint.set_label(_("Haz clic para grabar otra"))
             self.keycaps_box.append(keycaps(self._shortcut()[1], big=True))
         else:
-            self.capture_hint.set_label("Haz clic aquí y pulsa la tecla o combinación")
+            self.capture_hint.set_label(_("Haz clic aquí y pulsa la tecla o combinación"))
             icon = Gtk.Image(icon_name="input-keyboard-symbolic", pixel_size=32)
             self.keycaps_box.append(icon)
         shown = (live_mods or set()) if self.capturing else self.mods
@@ -991,16 +992,16 @@ class DevicePage(Gtk.ScrolledWindow):
             self.picture.set_from_paintable(Gdk.Texture.new_from_filename(str(art)))
         self.name_label.set_label(display_name(dev))
         kind = dev.get("kind", "").lower()
-        parts = [KIND_TEXT.get(kind, kind.capitalize())]
+        parts = [_(KIND_TEXT[kind]) if kind in KIND_TEXT else kind.capitalize()]
         if dev.get("codename") and dev["codename"] != dev["name"]:
             parts = [dev["name"].title()]
         if dev.get("bluetooth"):
             parts.append("Bluetooth")
         parts = [p for p in parts if p]
-        parts.append("Conectado" if dev["online"] else "Desconectado")
+        parts.append(_("Conectado") if dev["online"] else _("Desconectado"))
         self.sub_label.set_label(" · ".join(parts))
         frac, text = battery_summary(dev.get("battery"))
-        self.battery_label.set_label(text if dev["online"] else "Sin conexión")
+        self.battery_label.set_label(text if dev["online"] else _("Sin conexión"))
         self.battery_bar.set_visible(frac is not None and dev["online"])
         if frac is not None:
             self.battery_bar.set_value(frac)
@@ -1025,8 +1026,8 @@ class DevicePage(Gtk.ScrolledWindow):
         self.groups, self.rows, self.button_rows = [], {}, {}
         if buttons:
             group = Adw.PreferencesGroup(
-                title="Botones",
-                description="Asigna a cada botón otra función del ratón, un atajo de teclado, un texto o un comando.",
+                title=_("Botones"),
+                description=_("Asigna a cada botón otra función del ratón, un atajo de teclado, un texto o un comando."),
             )
             for b in buttons:
                 row = ButtonRow(self, b)
@@ -1044,7 +1045,7 @@ class DevicePage(Gtk.ScrolledWindow):
             items = [s for s in settings if wanted(s)]
             if not items:
                 continue
-            group = Adw.PreferencesGroup(title=title)
+            group = Adw.PreferencesGroup(title=_(title))
             for s in items:
                 row = make_row(self, s)
                 self.rows[s["name"]] = row
@@ -1053,7 +1054,7 @@ class DevicePage(Gtk.ScrolledWindow):
             self.groups.append(group)
         if not settings and not buttons:
             group = Adw.PreferencesGroup()
-            group.add(Adw.ActionRow(title="Este dispositivo no expone ajustes"))
+            group.add(Adw.ActionRow(title=_("Este dispositivo no expone ajustes")))
             self.box.append(group)
             self.groups.append(group)
 
@@ -1080,14 +1081,16 @@ class Window(Adw.ApplicationWindow):
         self.listbox = Gtk.ListBox(selection_mode=Gtk.SelectionMode.SINGLE)
         self.listbox.add_css_class("navigation-sidebar")
         self.listbox.connect("row-selected", self._on_row_selected)
+        side_header = Adw.HeaderBar()
+        side_header.pack_end(self._main_menu())
         side_view = Adw.ToolbarView()
-        side_view.add_top_bar(Adw.HeaderBar())
+        side_view.add_top_bar(side_header)
         side_view.set_content(Gtk.ScrolledWindow(child=self.listbox, hscrollbar_policy=Gtk.PolicyType.NEVER))
         self.split.set_sidebar(Adw.NavigationPage(title="Puntero", child=side_view))
 
         # contenido
         self.stack = Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
-        self.banner = Adw.Banner(title="Sin permiso para acceder a un dispositivo Logitech")
+        self.banner = Adw.Banner(title=_("Sin permiso para acceder a un dispositivo Logitech"))
         content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         content.append(self.banner)
         content.append(self.stack)
@@ -1095,13 +1098,13 @@ class Window(Adw.ApplicationWindow):
         self.content_view = Adw.ToolbarView()
         self.content_view.add_top_bar(Adw.HeaderBar())
         self.content_view.set_content(content)
-        self.content_page = Adw.NavigationPage(title="Dispositivo", child=self.content_view)
+        self.content_page = Adw.NavigationPage(title=_("Dispositivo"), child=self.content_view)
         self.split.set_content(self.content_page)
 
         self.searching = Adw.StatusPage(
             icon_name="input-mouse-symbolic",
-            title="Buscando dispositivos",
-            description="Enciende tu ratón o teclado Logitech.",
+            title=_("Buscando dispositivos"),
+            description=_("Enciende tu ratón o teclado Logitech."),
         )
         spinner = Adw.Spinner()
         spinner.set_size_request(32, 32)
@@ -1110,17 +1113,17 @@ class Window(Adw.ApplicationWindow):
 
         self.no_perm = Adw.StatusPage(
             icon_name="dialog-password-symbolic",
-            title="Falta permiso",
+            title=_("Falta permiso"),
             description=(
-                "El sistema no deja leer el dispositivo. Instala Solaar (trae las reglas udev) y ejecuta:\n\n"
+                _("El sistema no deja leer el dispositivo. Instala Solaar (trae las reglas udev) y ejecuta:") + "\n\n"
                 "<tt>sudo udevadm control --reload &amp;&amp; sudo udevadm trigger</tt>\n\n"
-                "Después apaga y enciende el ratón."
+                + _("Después apaga y enciende el ratón.")
             ),
         )
         self.stack.add_named(self.no_perm, "permissions")
 
-        self.dead = Adw.StatusPage(icon_name="dialog-error-symbolic", title="El motor se detuvo")
-        retry = Gtk.Button(label="Reiniciar", halign=Gtk.Align.CENTER)
+        self.dead = Adw.StatusPage(icon_name="dialog-error-symbolic", title=_("El motor se detuvo"))
+        retry = Gtk.Button(label=_("Reiniciar"), halign=Gtk.Align.CENTER)
         retry.add_css_class("pill")
         retry.add_css_class("suggested-action")
         retry.connect("clicked", lambda _b: self.start_backend())
@@ -1131,6 +1134,14 @@ class Window(Adw.ApplicationWindow):
         self.start_backend()
         self.connect("close-request", lambda _w: self.backend.stop() or False)
 
+    def _main_menu(self):
+        languages = Gio.Menu()
+        for choice, label in (("auto", _("Automático (el del sistema)")), ("es", "Español"), ("en", "English")):
+            languages.append(label, f"app.language::{choice}")
+        menu = Gio.Menu()
+        menu.append_section(_("Idioma"), languages)
+        return Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=menu, tooltip_text=_("Menú principal"))
+
     # -- motor
 
     def start_backend(self):
@@ -1138,14 +1149,14 @@ class Window(Adw.ApplicationWindow):
         try:
             self.backend.start()
         except GLib.Error as e:
-            self.dead.set_description(f"No se pudo iniciar: {e.message}")
+            self.dead.set_description(_("No se pudo iniciar: {error}").format(error=e.message))
             self.stack.set_visible_child_name("dead")
 
     def on_backend_exit(self):
         """El servicio no responde después de varios intentos de conexión."""
         self.dead.set_description(
-            "El proceso que habla con los dispositivos terminó. "
-            "Comprueba que Solaar está instalado (<tt>sudo pacman -S solaar</tt>)."
+            _("El proceso que habla con los dispositivos terminó. "
+              "Comprueba que Solaar está instalado (<tt>sudo pacman -S solaar</tt>).")
         )
         self.stack.set_visible_child_name("dead")
 
@@ -1170,7 +1181,8 @@ class Window(Adw.ApplicationWindow):
             else:
                 row = page.rows.get(name) if page else None
                 label = row.label if row else name
-            self.toasts.add_toast(Adw.Toast(title=f"No se pudo cambiar «{label}»: {msg.get('message')}"))
+            self.toasts.add_toast(Adw.Toast(title=_("No se pudo cambiar «{label}»: {error}").format(
+                label=label, error=_(msg.get("message") or ""))))
 
     # -- dispositivos
 
@@ -1214,7 +1226,7 @@ class Window(Adw.ApplicationWindow):
         row = self.sidebar_rows[dev["id"]]
         row.set_title(display_name(dev))
         _frac, text = battery_summary(dev.get("battery"))
-        row.set_subtitle(text if dev["online"] else "Desconectado")
+        row.set_subtitle(text if dev["online"] else _("Desconectado"))
         if dev["online"]:
             row.remove_css_class("dim-row")
         else:
@@ -1234,6 +1246,9 @@ class App(Adw.Application):
 
     def do_startup(self):
         Adw.Application.do_startup(self)
+        action = Gio.SimpleAction.new_stateful("language", GLib.VariantType.new("s"), GLib.Variant("s", language_choice()))
+        action.connect("change-state", self._on_language)
+        self.add_action(action)
         provider = Gtk.CssProvider()
         provider.load_from_string(CSS)
         Gtk.StyleContext.add_provider_for_display(
@@ -1243,6 +1258,21 @@ class App(Adw.Application):
     def do_activate(self):
         win = self.get_active_window() or Window(self)
         win.present()
+
+    def _on_language(self, action, value):
+        choice = value.get_string()
+        if choice not in LANGUAGES or choice == action.get_state().get_string():
+            return
+        action.set_state(value)
+        set_language_choice(choice)
+        # el servicio y el plugin de la barra toman los textos nuevos al reiniciarse
+        # el motor; la ventana se vuelve a abrir para construirse en el idioma nuevo
+        subprocess.run(["systemctl", "--user", "try-restart", "puntero.service"],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        win = self.get_active_window()
+        if win:
+            win.backend.stop()
+        os.execv(sys.executable, [sys.executable, "-m", "puntero", *sys.argv[1:]])
 
 
 def main():

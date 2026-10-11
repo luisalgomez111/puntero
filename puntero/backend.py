@@ -30,6 +30,11 @@ from concurrent.futures import ThreadPoolExecutor
 
 import gi
 
+from puntero.i18n import _, language, localize
+
+# Solaar entrega sus etiquetas en inglés; Puntero las traduce después (ver i18n.localize)
+os.environ["LANGUAGE"] = "en"
+
 gi.require_version("Gtk", "3.0")
 from gi.repository import GLib  # noqa: E402
 
@@ -39,7 +44,6 @@ from solaar import configuration  # noqa: E402
 from solaar import listener  # noqa: E402
 
 from puntero.buttons import DIVERT_SETTING, ButtonMapper  # noqa: E402
-from puntero.i18n import localize  # noqa: E402
 
 logger = logging.getLogger("puntero.backend")
 
@@ -269,7 +273,7 @@ def _show_osd(value, values):
         "duration": 1500,
     })
     for cmd in (["omarchy-shell", "osd", "show", payload],
-                ["notify-send", "-a", "Puntero", "-t", "1500", "Sensibilidad", f"{value} DPI"]):
+                ["notify-send", "-a", "Puntero", "-t", "1500", _("Sensibilidad"), f"{value} DPI"]):
         try:
             subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             return
@@ -348,7 +352,7 @@ class ClientHandler(socketserver.StreamRequestHandler):
     def handle(self):
         with _clients_lock:
             _clients.add(self.wfile)
-        emit({"type": "ready"}, self.wfile)
+        emit({"type": "ready", "language": language()}, self.wfile)
         for dev in list(_devices.values()):
             _io.submit(_publish, dev, self.wfile, True)
         try:

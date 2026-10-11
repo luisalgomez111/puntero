@@ -14,6 +14,7 @@ Panel {
   ipcTarget: "puntero.mouse"
 
   property var devices: ({})
+  property string language: "es"  // lo dice el servicio al conectarse ("es" o "en")
   property string currentId: ""
   property int pendingHost: -1
   property real dpiLive: -1      // posición mientras se arrastra
@@ -37,6 +38,24 @@ Panel {
 
   readonly property string mouseGlyph: "󰍽"
 
+  // textos del panel en inglés (clave: el texto en español); el resto llega ya traducido
+  readonly property var english: ({
+    "Cargando": "Charging",
+    "Conectado": "Connected",
+    "Desconectado": "Disconnected",
+    "Original": "Default",
+    "SENSIBILIDAD": "SENSITIVITY",
+    "BOTONES": "BUTTONS",
+    "EQUIPO CONECTADO": "CONNECTED COMPUTER",
+    "Pulsa otra vez para pasar el ratón aquí": "Click again to move the mouse here",
+    "Este equipo": "This computer",
+    "Abrir Puntero": "Open Puntero"
+  })
+
+  function tr(text) {
+    return language === "en" && english[text] !== undefined ? english[text] : text
+  }
+
   function findSetting(name) {
     if (!device || !device.settings) return null
     for (var i = 0; i < device.settings.length; i++)
@@ -53,7 +72,7 @@ Panel {
     if (!device) return ""
     var parts = []
     if (device.bluetooth) parts.push("Bluetooth")
-    parts.push(online ? (charging ? "Cargando" : "Conectado") : "Desconectado")
+    parts.push(tr(online ? (charging ? "Cargando" : "Conectado") : "Desconectado"))
     return parts.join(" · ")
   }
 
@@ -100,7 +119,7 @@ Panel {
       for (var i = 0; i < b.remap_choices.length; i++)
         if (b.remap_choices[i].id === b.remap) return b.remap_choices[i].label
     }
-    return "Original"
+    return tr("Original")
   }
 
   function hostName(choice) {
@@ -130,6 +149,7 @@ Panel {
     var msg
     try { msg = JSON.parse(line) } catch (e) { return }
     var next = Object.assign({}, devices)
+    if (msg.type === "ready") { language = msg.language || "es"; return }
     if (msg.type === "device") next[msg.device.id] = msg.device
     else if (msg.type === "removed") delete next[msg.id]
     else return
@@ -355,7 +375,7 @@ Panel {
 
             PanelSectionHeader {
               id: dpiHeader
-              text: "SENSIBILIDAD"
+              text: root.tr("SENSIBILIDAD")
               foreground: root.fg
               fontFamily: root.fontFamily
             }
@@ -397,7 +417,7 @@ Panel {
           visible: root.buttons.length > 0
 
           PanelSectionHeader {
-            text: "BOTONES"
+            text: root.tr("BOTONES")
             foreground: root.fg
             fontFamily: root.fontFamily
           }
@@ -443,7 +463,7 @@ Panel {
           visible: root.hostSetting !== null && root.online
 
           PanelSectionHeader {
-            text: "EQUIPO CONECTADO"
+            text: root.tr("EQUIPO CONECTADO")
             foreground: root.fg
             fontFamily: root.fontFamily
           }
@@ -509,7 +529,7 @@ Panel {
                   Text {
                     width: parent.width
                     visible: hostItem.current || hostItem.pending
-                    text: hostItem.pending ? "Pulsa otra vez para pasar el ratón aquí" : "Este equipo"
+                    text: root.tr(hostItem.pending ? "Pulsa otra vez para pasar el ratón aquí" : "Este equipo")
                     wrapMode: Text.Wrap
                     color: hostItem.pending ? root.urgent : root.dim
                     font.family: root.fontFamily
@@ -545,7 +565,7 @@ Panel {
 
         Button {
           width: parent.width
-          text: "Abrir Puntero"
+          text: root.tr("Abrir Puntero")
           iconText: "󰒓"
           fontSize: Style.font.bodySmall
           foreground: root.fg

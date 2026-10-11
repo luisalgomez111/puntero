@@ -2,17 +2,17 @@
   "schemaVersion": 1,
   "id": "puntero.mouse",
   "name": "Puntero",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "Puntero",
   "license": "GPL-3.0-or-later",
-  "description": "Batería, DPI, botones y Easy-Switch de tus ratones Logitech, usando el servicio de Puntero.",
+  "description": "Battery, DPI, buttons and Easy-Switch for your Logitech mice, using the Puntero service.",
   "kinds": ["bar-widget"],
   "entryPoints": {
     "barWidget": "Panel.qml"
   },
   "barWidget": {
     "displayName": "Puntero",
-    "description": "Batería y ajustes rápidos del ratón Logitech.",
+    "description": "Battery and quick settings for your Logitech mouse.",
     "category": "System",
     "aliases": ["mouse", "raton", "logitech", "battery"],
     "allowMultiple": false,
@@ -21,7 +21,7 @@
       "showPercentage": true
     },
     "schema": [
-      { "key": "showPercentage", "type": "boolean", "label": "Mostrar el porcentaje de batería", "defaultValue": true }
+      { "key": "showPercentage", "type": "boolean", "label": "Show battery percentage", "defaultValue": true }
     ]
   }
 }

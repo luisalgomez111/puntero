@@ -1,80 +1,88 @@
 # Puntero
 
-Una app moderna y libre para configurar ratones y teclados **Logitech** en Linux.
-Usa [Solaar](https://github.com/pwr-Solaar/Solaar) como motor y una interfaz GTK4 + libadwaita.
+**English** · [Español](README.es.md)
 
-![Ventana principal de Puntero](docs/captura-main.png)
+A modern, free app to configure **Logitech** mice and keyboards on Linux.
+It uses [Solaar](https://github.com/pwr-Solaar/Solaar) as its engine, with a GTK4 + libadwaita interface.
 
-<sub>En las capturas se ve la foto del ratón añadida como [imagen propia](#imágenes-propias); sin ella, Puntero muestra una ilustración.</sub>
+![Puntero main window](docs/en/main.png)
 
-## Qué hace
+<sub>The screenshots show a photo of the mouse added as a [custom image](#custom-images); without it, Puntero shows an illustration.</sub>
 
-- **Batería** en grande, con aviso de carga.
-- **Sensibilidad (DPI)** con un deslizador.
-- **Botones a tu gusto**: cada botón puede ser
-  - otro botón del ratón,
-  - un **atajo de teclado** (una letra, `Ctrl+C`, `Ctrl+Shift+T`, teclas multimedia…),
-  - un **texto completo** que se escribe donde esté el cursor (un saludo, una firma, tu correo…),
-  - un **comando**,
-  - un **ciclo de DPI**: varios puntos preconfigurados que se recorren con cada pulsación
-    (por ejemplo 800 → 1600 → 3200), con aviso en pantalla.
-- **Easy-Switch**: pasar el ratón a otro equipo emparejado, con confirmación.
-- **Funciona en segundo plano**: los atajos siguen activos con la ventana cerrada.
-- **Plugin para la barra de [Omarchy](https://omarchy.org)**: batería en la barra y un panel con
-  DPI, botones y Easy-Switch.
-- Funciona en Wayland y X11 y con cualquier escritorio (GNOME, KDE, Hyprland, Sway…).
-- Compatible con la configuración de Solaar: comparten el mismo archivo de ajustes.
+## Features
 
-| Atajos de teclado | Texto en un botón | Ciclo de DPI |
+- **Battery** shown big, with charging status.
+- **Sensitivity (DPI)** with a slider.
+- **Buttons your way**: each button can be
+  - another mouse button,
+  - a **keyboard shortcut** (a letter, `Ctrl+C`, `Ctrl+Shift+T`, media keys…),
+  - a **full text** typed wherever the cursor is (a greeting, a signature, your email…),
+  - a **command**,
+  - a **DPI cycle**: several preset steps that change with each press
+    (for example 800 → 1600 → 3200), with an on-screen indicator.
+- **Easy-Switch**: move the mouse to another paired computer, with confirmation.
+- **Runs in the background**: shortcuts keep working with the window closed.
+- **Bar plugin for [Omarchy](https://omarchy.org)**: battery in the bar and a panel with
+  DPI, buttons and Easy-Switch.
+- **In English and Spanish**: follows the system language, or the one you pick in the app menu.
+- Works on Wayland and X11 and with any desktop (GNOME, KDE, Hyprland, Sway…).
+- Compatible with Solaar's configuration: they share the same settings file.
+
+| Keyboard shortcuts | Text on a button | DPI cycle |
 |---|---|---|
-| ![Editor de atajos](docs/captura-keys.png) | ![Texto en un botón](docs/captura-texto.png) | ![Puntos de DPI](docs/captura-dpi.png) |
+| ![Shortcut editor](docs/en/keys.png) | ![Text on a button](docs/en/text.png) | ![DPI steps](docs/en/dpi.png) |
 
-### Plugin para la barra de Omarchy
+### Omarchy bar plugin
 
-<img src="docs/captura-barra.png" alt="Panel de Puntero en la barra de Omarchy" width="360">
+<img src="docs/en/bar.png" alt="Puntero panel in the Omarchy bar" width="360">
 
-Batería en la barra y, con un clic, un panel con la sensibilidad, lo que hace cada botón y el
-equipo conectado por Easy-Switch.
+Battery in the bar and, one click away, a panel with the sensitivity, what each button does and
+the computer connected through Easy-Switch.
 
-## Requisitos
+## Requirements
 
-- Linux con **systemd** (el servicio en segundo plano es de systemd).
-- **Solaar 1.1.20** o parecido (Puntero usa partes internas de Solaar; con versiones muy distintas
-  algo podría fallar, y el instalador avisa).
-- **GTK 4** y **libadwaita 1.7 o superior** (Arch, Fedora 42+, Ubuntu 25.04+…).
-- **python-evdev** (para simular las teclas de los atajos).
-- Opcional: **wtype** (Wayland) o **xdotool** (X11) para escribir textos con acentos, ñ y
-  símbolos desde un botón. Sin ellos solo se escriben letras sin acento, números y espacios.
+- Linux with **systemd** (the background service is a systemd user service).
+- **Solaar 1.1.20** or similar (Puntero uses Solaar internals; very different versions might
+  break something, and the installer warns about it).
+- **GTK 4** and **libadwaita 1.7 or newer** (Arch, Fedora 42+, Ubuntu 25.04+…).
+- **python-evdev** (to simulate the shortcut keys).
+- Optional: **wtype** (Wayland) or **xdotool** (X11) to type texts with accents and symbols
+  from a button. Without them only plain letters, numbers and spaces are typed.
 
-Probado con un Logitech **LIFT** por Bluetooth. Debería funcionar con cualquier dispositivo que
-Solaar reconozca; si lo pruebas con otro modelo, cuéntalo en un *issue*.
+Tested with a Logitech **LIFT** over Bluetooth. It should work with any device Solaar
+recognizes; if you try it with another model, please tell us in an *issue*.
 
-## Instalación
+## Installation
 
-### Arch Linux y derivadas (AUR)
+### Arch Linux and derivatives
+
+Coming soon to the AUR (`yay -S puntero`). Meanwhile, install the same package from this
+repository:
 
 ```
-yay -S puntero
+git clone https://github.com/luisalgomez111/puntero.git
+cd puntero/packaging/aur
+makepkg -si
 puntero --setup
 ```
 
-`puntero --setup` arranca el servicio y, si usas Omarchy, pone el plugin en la barra. Después
-apaga y enciende el ratón para que se apliquen los permisos de Solaar. Antes de desinstalar el
-paquete, ejecuta `puntero --reset` para devolver los botones a su función original.
+`puntero --setup` starts the service and, on Omarchy, adds the plugin to the bar. Then turn the
+mouse off and on so Solaar's permissions apply. Before removing the package, run
+`puntero --reset` to give the buttons back their default function.
 
-### Cualquier distribución (instalador)
+### Any distribution (installer)
 
-1. Instala las dependencias. El instalador te dice el comando exacto para tu distribución
-   (`pacman`, `apt`, `dnf` o `zypper`) si falta algo. En Arch, por ejemplo:
+1. Install the dependencies. If something is missing, the installer tells you the exact command
+   for your distribution (`pacman`, `apt`, `dnf` or `zypper`). On Arch, for example:
 
    ```
    sudo pacman -S --needed solaar python-evdev python-gobject gtk4 libadwaita
    sudo udevadm control --reload && sudo udevadm trigger
    ```
 
-   Después apaga y enciende el ratón para que se apliquen los permisos.
+   Then turn the mouse off and on so the permissions apply.
 
-2. Descarga Puntero y ejecuta el instalador:
+2. Download Puntero and run the installer:
 
    ```
    git clone https://github.com/luisalgomez111/puntero.git
@@ -82,82 +90,89 @@ paquete, ejecuta `puntero --reset` para devolver los botones a su función origi
    ./install.sh
    ```
 
-El instalador deja todo listo para tu usuario:
+The installer sets everything up for your user:
 
-- copia el programa a `~/.local/share/puntero`;
-- crea el comando `puntero` y el acceso en el menú de apps;
-- instala y arranca el servicio `puntero.service`;
-- si usas Omarchy, instala el plugin de la barra y lo pone junto al Bluetooth.
+- copies the program to `~/.local/share/puntero`;
+- creates the `puntero` command and the app menu entry;
+- installs and starts the `puntero.service` service;
+- on Omarchy, installs the bar plugin and places it next to Bluetooth.
 
-Puedes ejecutarlo varias veces sin duplicar nada. Con `./install.sh --dev` usa la carpeta del
-repositorio tal cual (útil para desarrollar).
+You can run it several times without duplicating anything. `./install.sh --dev` uses the
+repository folder as is (handy for development).
 
-## Uso
+## Usage
 
-Abre **Puntero** desde el menú de apps o con `puntero`. En Omarchy también tienes el icono del
-ratón en la barra: clic izquierdo abre el panel rápido y clic derecho abre la app.
+Open **Puntero** from the app menu or with `puntero`. On Omarchy you also get the mouse icon in
+the bar: left click opens the quick panel and right click opens the app.
 
-### Atajos de teclado en los botones
+### Keyboard shortcuts on buttons
 
-El ratón solo sabe cambiar un botón por otro botón del ratón. Para que un botón lance un atajo,
-Puntero lo **desvía**: el ratón avisa de la pulsación y el servicio simula las teclas con
-`/dev/uinput`. Por eso los atajos funcionan mientras el servicio está activo (arranca solo con la
-sesión).
+The mouse itself can only swap one mouse button for another. To make a button send a shortcut,
+Puntero **diverts** it: the mouse reports the press and the service simulates the keys through
+`/dev/uinput`. That's why shortcuts work while the service is running (it starts with your
+session).
 
-Si Hyprland u otro escritorio se queda una combinación con **Super** antes de que Puntero la vea,
-activa el botón **Super** en el editor y graba solo la otra tecla.
+If Hyprland or another desktop grabs a **Super** combination before Puntero sees it, turn on the
+**Super** toggle in the editor and record only the other key.
 
-### Texto en un botón
+### Text on a button
 
-En la pestaña **Texto** del editor del botón escribe lo que quieras que salga al pulsarlo; puede
-tener varias líneas. Se escribe donde esté el cursor, como si lo teclearas. Con **wtype** o
-**xdotool** instalado sale cualquier carácter, sea cual sea la distribución de tu teclado.
+In the **Text** tab of the button editor, write what you want typed when you press it; it can
+have several lines. It's typed wherever the cursor is, as if you typed it yourself. With
+**wtype** or **xdotool** installed, any character works, whatever your keyboard layout.
 
-### Imágenes propias
+### Language
 
-Puntero incluye ilustraciones propias. Si quieres ver la foto de tu ratón, guárdala como
-`~/.config/puntero/images/<nombre>.png` (también `.svg`, `.webp` o `.jpg`), donde `<nombre>` es el
-nombre corto del dispositivo tal como aparece en la app, por ejemplo `LIFT.png`.
+Puntero is available in **English** and **Spanish**. By default it follows the system language
+(Spanish if your system is in Spanish, English otherwise). To change it, open the **☰** menu in
+the sidebar and choose **Language**. The app and the bar plugin restart in the new language.
 
-## Desinstalación
+### Custom images
+
+Puntero ships its own illustrations. To see a photo of your mouse, save it as
+`~/.config/puntero/images/<name>.png` (also `.svg`, `.webp` or `.jpg`), where `<name>` is the
+short device name as shown in the app, for example `LIFT.png`.
+
+## Uninstall
 
 ```
-./uninstall.sh          # conserva tu configuración (~/.config/puntero)
-./uninstall.sh --purge  # también borra la configuración y las imágenes
+./uninstall.sh          # keeps your configuration (~/.config/puntero)
+./uninstall.sh --purge  # also removes the configuration and images
 ```
 
-Antes de detener el servicio devuelve los botones a su función original. Los atajos guardados se
-conservan y se vuelven a aplicar solos si reinstalas.
+Before stopping the service it gives the buttons back their default function. Saved shortcuts
+are kept and applied again automatically if you reinstall.
 
-## Cómo está hecho
+## How it's built
 
-- `puntero/backend.py`: servicio en segundo plano (`puntero.service`). Usa `logitech_receiver` y
-  `solaar.listener` y escucha en `$XDG_RUNTIME_DIR/puntero.sock` con un protocolo de una línea JSON
-  por mensaje. Corre aparte de la interfaz porque Solaar carga GTK3, que no puede convivir con
-  GTK4 en el mismo proceso.
-- `puntero/buttons.py`: atajos, comandos y ciclo de DPI en los botones (desvío por HID++ y teclas
-  simuladas con uinput). Se guardan en `~/.config/puntero/buttons.json`.
-- `puntero/i18n.py`: textos en español; el servicio los aplica antes de enviar los datos.
-- `puntero/app.py`: la interfaz GTK4; si el servicio no está en marcha, lo arranca.
-- `omarchy-plugin/`: widget de barra para Omarchy (QML), conectado al mismo socket;
-  `data/omarchy-plugin.sh` lo pone o lo quita de la barra.
-- `packaging/aur/`: `PKGBUILD` del paquete de AUR.
-  Tras editar su QML hace falta `omarchy restart shell`.
-- Los ajustes del ratón se guardan en `~/.config/solaar/config.yaml`, el mismo archivo que usa Solaar.
+- `puntero/backend.py`: background service (`puntero.service`). It uses `logitech_receiver` and
+  `solaar.listener` and listens on `$XDG_RUNTIME_DIR/puntero.sock` with a one-JSON-line-per-message
+  protocol. It runs apart from the interface because Solaar loads GTK3, which can't live with
+  GTK4 in the same process.
+- `puntero/buttons.py`: shortcuts, texts, commands and DPI cycle on buttons (HID++ diversion and
+  keys simulated with uinput). Saved in `~/.config/puntero/buttons.json`.
+- `puntero/i18n.py` and `puntero/lang_en.py`: languages. Texts are written in Spanish and
+  `lang_en.py` holds their English translation; the service translates the data before sending it.
+- `puntero/app.py`: the GTK4 interface; it starts the service if it isn't running.
+- `omarchy-plugin/`: Omarchy bar widget (QML), connected to the same socket;
+  `data/omarchy-plugin.sh` adds it to or removes it from the bar. After editing its QML you need
+  `omarchy restart shell`.
+- `packaging/aur/`: the AUR package `PKGBUILD`.
+- Mouse settings are stored in `~/.config/solaar/config.yaml`, the same file Solaar uses.
 
-## Apoya el proyecto
+## Support the project
 
-Puntero es libre y gratuito. Si te resulta útil y quieres apoyar su desarrollo, puedes hacer una
-donación por **Binance Pay**:
+Puntero is free software. If you find it useful and want to support its development, you can
+donate through **Binance Pay**:
 
 **Binance Pay ID: `368493246`**
 
-En la app de Binance entra en **Pay**, elige enviar y escribe el Pay ID. ¡Gracias! 💙
+In the Binance app go to **Pay**, choose send and enter the Pay ID. Thank you! 💙
 
-## Licencia
+## License
 
-Puntero es software libre bajo la licencia **GNU GPL v3 o posterior** (ver [LICENSE](LICENSE)).
-Usa Solaar, que se distribuye bajo GPL v2 o posterior.
+Puntero is free software under the **GNU GPL v3 or later** license (see [LICENSE](LICENSE)).
+It uses Solaar, which is distributed under the GPL v2 or later.
 
-Puntero es un proyecto independiente y no tiene relación con Logitech. Logitech, LIFT y
-Easy-Switch son marcas de Logitech; se nombran solo para indicar compatibilidad.
+Puntero is an independent project and is not affiliated with Logitech. Logitech, LIFT and
+Easy-Switch are trademarks of Logitech; they are mentioned only to indicate compatibility.
