@@ -5,6 +5,8 @@ Usa [Solaar](https://github.com/pwr-Solaar/Solaar) como motor y una interfaz GTK
 
 ![Ventana principal de Puntero](docs/captura-main.png)
 
+<sub>En las capturas se ve la foto del ratón añadida como [imagen propia](#imágenes-propias); sin ella, Puntero muestra una ilustración.</sub>
+
 ## Qué hace
 
 - **Batería** en grande, con aviso de carga.
