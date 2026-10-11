@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 300">
+  <defs>
+    <linearGradient id="body" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5b5f68"/>
+      <stop offset="0.55" stop-color="#3a3d44"/>
+      <stop offset="1" stop-color="#25272c"/>
+    </linearGradient>
+    <linearGradient id="shell" x1="0" y1="0" x2="1" y2="0.6">
+      <stop offset="0" stop-color="#8a8f99"/>
+      <stop offset="0.5" stop-color="#6b7079"/>
+      <stop offset="1" stop-color="#4a4e56"/>
+    </linearGradient>
+    <linearGradient id="thumb" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2f3238"/>
+      <stop offset="1" stop-color="#1d1f23"/>
+    </linearGradient>
+    <linearGradient id="wheel" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1b1c20"/>
+      <stop offset="0.5" stop-color="#55585f"/>
+      <stop offset="1" stop-color="#1b1c20"/>
+    </linearGradient>
+    <radialGradient id="shine" cx="0.35" cy="0.25" r="0.6">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="9"/>
+    </filter>
+  </defs>
+
+  <ellipse cx="165" cy="262" rx="118" ry="16" fill="#000" opacity="0.35" filter="url(#soft)"/>
+
+  <!-- cuerpo -->
+  <path d="M58 240 C46 180 70 92 128 52 C168 24 222 30 250 64 C280 100 286 170 272 236 C268 252 254 260 236 260 L86 260 C70 260 61 254 58 240 Z" fill="url(#body)"/>
+
+  <!-- carcasa superior con los botones principales -->
+  <path d="M128 52 C168 24 222 30 250 64 C268 86 278 120 280 156 C246 120 196 100 140 104 C118 106 98 112 82 122 C94 94 108 66 128 52 Z" fill="url(#shell)"/>
+  <path d="M168 40 C176 70 180 92 182 104" stroke="#2a2c31" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+  <!-- rueda de desplazamiento -->
+  <g transform="rotate(-28 176 56)">
+    <rect x="166" y="34" width="20" height="44" rx="10" fill="url(#wheel)"/>
+    <g stroke="#0e0f11" stroke-width="1.6" opacity="0.7">
+      <line x1="168" y1="44" x2="184" y2="44"/>
+      <line x1="168" y1="51" x2="184" y2="51"/>
+      <line x1="168" y1="58" x2="184" y2="58"/>
+      <line x1="168" y1="65" x2="184" y2="65"/>
+    </g>
+  </g>
+
+  <!-- botones del pulgar -->
+  <path d="M84 176 C96 166 128 160 158 162 C164 163 166 168 162 172 C134 174 108 180 92 188 C84 190 80 182 84 176 Z" fill="url(#thumb)"/>
+  <path d="M90 200 C104 192 132 188 158 189 C164 190 166 195 162 199 C136 200 112 205 98 212 C90 214 86 206 90 200 Z" fill="url(#thumb)"/>
+
+  <!-- reposapulgar y brillo -->
+  <path d="M70 226 C110 214 180 212 268 222" stroke="#1a1b1f" stroke-width="3" fill="none" opacity="0.6"/>
+  <path d="M58 240 C46 180 70 92 128 52 C168 24 222 30 250 64 C280 100 286 170 272 236 C268 252 254 260 236 260 L86 260 C70 260 61 254 58 240 Z" fill="url(#shine)"/>
+
+  <!-- botón de DPI y LED -->
+  <circle cx="214" cy="118" r="6" fill="#2a2c31"/>
+  <circle cx="232" cy="244" r="3.5" fill="#7ee0a1"/>
+</svg>
