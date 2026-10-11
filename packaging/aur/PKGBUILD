@@ -11,7 +11,7 @@ optdepends=('wtype: type texts with accents and symbols from a button (Wayland)'
             'xdotool: type texts with accents and symbols from a button (X11)')
 install=puntero.install
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('1384c6f1bb9b6546b695e22e293f9ec69f39429b1884d11e4725234f8f42b9de')
+sha256sums=('da532428a20e982a9995d176c5afd7d6a77d938620abc8108bdf43ef622bb7ee')
 
 package() {
   cd "$pkgname-$pkgver"

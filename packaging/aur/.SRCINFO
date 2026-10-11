@@ -1,6 +1,6 @@
 pkgbase = puntero
-	pkgdesc = App moderna para configurar ratones y teclados Logitech (batería, DPI, botones, Easy-Switch) usando Solaar
-	pkgver = 0.1.0
+	pkgdesc = Modern app to configure Logitech mice and keyboards (battery, DPI, buttons, Easy-Switch) using Solaar
+	pkgver = 0.2.0
 	pkgrel = 1
 	url = https://github.com/luisalgomez111/puntero
 	install = puntero.install
@@ -12,9 +12,9 @@ pkgbase = puntero
 	depends = python-gobject
 	depends = gtk4
 	depends = libadwaita>=1.7
-	optdepends = wtype: escribir textos con acentos y símbolos desde un botón (Wayland)
-	optdepends = xdotool: escribir textos con acentos y símbolos desde un botón (X11)
-	source = puntero-0.1.0.tar.gz::https://github.com/luisalgomez111/puntero/archive/refs/tags/v0.1.0.tar.gz
-	sha256sums = 1384c6f1bb9b6546b695e22e293f9ec69f39429b1884d11e4725234f8f42b9de
+	optdepends = wtype: type texts with accents and symbols from a button (Wayland)
+	optdepends = xdotool: type texts with accents and symbols from a button (X11)
+	source = puntero-0.2.0.tar.gz::https://github.com/luisalgomez111/puntero/archive/refs/tags/v0.2.0.tar.gz
+	sha256sums = da532428a20e982a9995d176c5afd7d6a77d938620abc8108bdf43ef622bb7ee
 
 pkgname = puntero
