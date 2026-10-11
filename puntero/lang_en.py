@@ -166,7 +166,7 @@ EN = {
         "The process that talks to the devices has stopped. "
         "Check that Solaar is installed (<tt>sudo pacman -S solaar</tt>).",
     "No se pudo cambiar «{label}»: {error}": "Could not change “{label}”: {error}",
-    "Automático (el del sistema)": "Automatic (system language)",
+    "Automático: {language}": "Automatic: {language}",
     "Idioma": "Language",
     "Menú principal": "Main menu",
 

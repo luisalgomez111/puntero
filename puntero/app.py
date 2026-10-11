@@ -17,7 +17,7 @@ from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
 
 from evdev import ecodes  # noqa: E402
 
-from puntero.i18n import KEY_NAMES, LANGUAGES, _, code_label, key_label, key_name, language_choice, localize, set_language_choice, text_label  # noqa: E402
+from puntero.i18n import KEY_NAMES, LANGUAGES, _, code_label, key_label, key_name, language_choice, localize, set_language_choice, system_language, text_label  # noqa: E402
 
 APP_ID = "ve.puntero.Puntero"
 ROOT = Path(__file__).resolve().parent
@@ -1136,7 +1136,8 @@ class Window(Adw.ApplicationWindow):
 
     def _main_menu(self):
         languages = Gio.Menu()
-        for choice, label in (("auto", _("Automático (el del sistema)")), ("es", "Español"), ("en", "English")):
+        system = {"es": "Español", "en": "English"}[system_language()]
+        for choice, label in (("auto", _("Automático: {language}").format(language=system)), ("es", "Español"), ("en", "English")):
             languages.append(label, f"app.language::{choice}")
         menu = Gio.Menu()
         menu.append_section(_("Idioma"), languages)
