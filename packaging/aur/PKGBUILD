@@ -1,0 +1,47 @@
+# Maintainer: luis alberto gomez <luisalgomez111 at github>
+pkgname=puntero
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="App moderna para configurar ratones y teclados Logitech (batería, DPI, botones, Easy-Switch) usando Solaar"
+arch=('any')
+url="https://github.com/luisalgomez111/puntero"
+license=('GPL-3.0-or-later')
+depends=('python' 'solaar' 'python-evdev' 'python-gobject' 'gtk4' 'libadwaita>=1.7')
+optdepends=('wtype: escribir textos con acentos y símbolos desde un botón (Wayland)'
+            'xdotool: escribir textos con acentos y símbolos desde un botón (X11)')
+install=puntero.install
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+package() {
+  cd "$pkgname-$pkgver"
+  local lib="$pkgdir/usr/lib/puntero"
+
+  install -d "$lib" "$pkgdir/usr/share/puntero"
+  cp -r puntero "$lib/"
+  cp -r omarchy-plugin "$pkgdir/usr/share/puntero/"
+  install -m755 data/omarchy-plugin.sh "$lib/omarchy-plugin.sh"
+  find "$lib" -name __pycache__ -type d -prune -exec rm -rf {} +
+  python -m compileall -q -d /usr/lib/puntero "$lib/puntero"
+
+  install -Dm755 data/puntero-launcher.sh "$pkgdir/usr/bin/puntero"
+
+  install -d "$pkgdir/usr/lib/systemd/user"
+  sed -e "s|@APPDIR@|/usr/lib/puntero|" -e "s|@PYTHON@|/usr/bin/python3|" \
+    data/puntero.service >"$pkgdir/usr/lib/systemd/user/puntero.service"
+
+  install -Dm644 /dev/stdin "$pkgdir/usr/share/applications/puntero.desktop" <<DESKTOP
+[Desktop Entry]
+Version=1.0
+Name=Puntero
+Comment=Controla tus ratones y teclados Logitech
+Exec=puntero
+Icon=input-mouse
+Terminal=false
+Type=Application
+Categories=Settings;HardwareSettings;
+StartupWMClass=ve.puntero.Puntero
+DESKTOP
+
+  install -Dm644 README.md "$pkgdir/usr/share/doc/puntero/README.md"
+}

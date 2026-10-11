@@ -16,7 +16,7 @@ from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
 
 from evdev import ecodes  # noqa: E402
 
-from puntero.i18n import KEY_NAMES, code_label, key_label, localize  # noqa: E402
+from puntero.i18n import KEY_NAMES, code_label, key_label, localize, text_label  # noqa: E402
 
 APP_ID = "ve.puntero.Puntero"
 ROOT = Path(__file__).resolve().parent
@@ -38,6 +38,7 @@ CSS = """
 .dim-row { opacity: 0.5; }
 .capture-area { min-height: 120px; padding: 18px; }
 .capture-area.capturing { box-shadow: inset 0 0 0 2px @accent_color; }
+.text-area, .text-area text { background: transparent; }
 .keycap {
   padding: 2px 8px;
   min-width: 12px;
@@ -506,6 +507,8 @@ def button_summary(b):
         return f"Atajo: {action['label']}"
     if action and action["type"] == "command":
         return f"Comando: {action['label']}"
+    if action and action["type"] == "text":
+        return f"Escribe: «{action['label']}»"
     if action and action["type"] == "dpi_cycle":
         return f"Ciclo de DPI: {action['label']}"
     if b.get("remap") is not None and b["remap"] != b["cid"]:
@@ -538,10 +541,10 @@ class ButtonRow:
 
 
 class ButtonDialog(Adw.Dialog):
-    """Elige qué hace un botón: su función, otro botón, un atajo de teclado o un comando."""
+    """Elige qué hace un botón: su función, otro botón, un atajo de teclado, un texto o un comando."""
 
     def __init__(self, page, button):
-        super().__init__(title=button["label"], content_width=520, content_height=640)
+        super().__init__(title=button["label"], content_width=580, content_height=640)
         self.page, self.button = page, button
         self.mods = set()  # códigos evdev de los modificadores elegidos
         self.key = None  # (código evdev, nombre visible) de la tecla principal
@@ -566,6 +569,7 @@ class ButtonDialog(Adw.Dialog):
             self._add_tab("remap", "Otro botón", self._page_remap())
         if button["can_divert"]:
             self._add_tab("keys", "Teclado", self._page_keys())
+            self._add_tab("text", "Texto", self._page_text())
             self._add_tab("command", "Comando", self._page_command())
             self.dpi_choices = self._dpi_choices()
             if self.dpi_choices:
@@ -575,6 +579,9 @@ class ButtonDialog(Adw.Dialog):
         if action and action["type"] == "keys":
             self._set_shortcut(action["codes"], action.get("names"))
             self.tabs.set_active_name("keys")
+        elif action and action["type"] == "text":
+            self.text_buffer.set_text(action["text"])
+            self.tabs.set_active_name("text")
         elif action and action["type"] == "command":
             self.command_row.set_text(action["command"])
             self.tabs.set_active_name("command")
@@ -613,6 +620,7 @@ class ButtonDialog(Adw.Dialog):
         name = self.tabs.get_active_name() or "default"
         ready = {
             "keys": self.key is not None,
+            "text": hasattr(self, "text_buffer") and bool(self._text()),
             "command": hasattr(self, "command_row") and bool(self.command_row.get_text().strip()),
             "dpi": len(self._dpi_values()) >= 2 if hasattr(self, "dpi_rows") else False,
         }.get(name, True)
@@ -685,6 +693,35 @@ class ButtonDialog(Adw.Dialog):
         page.append(group)
         self._show_shortcut()
         return page
+
+    def _page_text(self):
+        page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18)
+        group = Adw.PreferencesGroup(
+            title="Texto que se escribe",
+            description="Al pulsar el botón se escribe este texto donde esté el cursor: un saludo, "
+                        "una firma, tu correo… Puede tener varias líneas.")
+        self.text_buffer = Gtk.TextBuffer()
+        self.text_buffer.connect("changed", lambda *_: self._refresh())
+        view = Gtk.TextView(buffer=self.text_buffer, wrap_mode=Gtk.WrapMode.WORD_CHAR,
+                            top_margin=12, bottom_margin=12, left_margin=12, right_margin=12)
+        view.add_css_class("text-area")
+        frame = Gtk.ScrolledWindow(child=view, min_content_height=140, hscrollbar_policy=Gtk.PolicyType.NEVER)
+        frame.add_css_class("card")
+        frame.set_overflow(Gtk.Overflow.HIDDEN)
+        group.add(frame)
+        page.append(group)
+        if not shutil.which("wtype") and not shutil.which("xdotool"):
+            hint = Gtk.Label(wrap=True, xalign=0,
+                             label="Para escribir acentos, ñ y símbolos instala wtype (Wayland) o xdotool (X11). "
+                                   "Sin ellos solo se escriben letras sin acento, números y espacios.")
+            hint.add_css_class("dim-label")
+            hint.add_css_class("caption")
+            page.append(hint)
+        return page
+
+    def _text(self):
+        start, end = self.text_buffer.get_bounds()
+        return self.text_buffer.get_text(start, end, False).rstrip("\n")
 
     def _page_command(self):
         page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18)
@@ -881,6 +918,9 @@ class ButtonDialog(Adw.Dialog):
         if choice == "keys":
             codes, names = self._shortcut()
             action = {"type": "keys", "codes": codes, "names": names, "label": "+".join(names)}
+        elif choice == "text":
+            text = self._text()
+            action = {"type": "text", "text": text, "label": text_label(text)}
         elif choice == "command":
             command = self.command_row.get_text().strip()
             action = {"type": "command", "command": command, "label": command}
@@ -986,7 +1026,7 @@ class DevicePage(Gtk.ScrolledWindow):
         if buttons:
             group = Adw.PreferencesGroup(
                 title="Botones",
-                description="Asigna a cada botón otra función del ratón, un atajo de teclado o un comando.",
+                description="Asigna a cada botón otra función del ratón, un atajo de teclado, un texto o un comando.",
             )
             for b in buttons:
                 row = ButtonRow(self, b)

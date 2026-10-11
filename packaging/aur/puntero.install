@@ -1,0 +1,26 @@
+post_install() {
+  # el servicio arranca solo con la sesión gráfica de cada usuario
+  systemctl --global enable puntero.service >/dev/null 2>&1 || true
+  cat <<MSG
+==> Puntero instalado.
+    - Ábrelo desde el menú de apps o con: puntero
+    - En Omarchy, para poner el plugin en la barra y arrancar ya el servicio: puntero --setup
+    - Apaga y enciende el ratón para que se apliquen los permisos de Solaar.
+    - Antes de desinstalar el paquete, ejecuta: puntero --reset
+      (devuelve los botones a su función original y quita el plugin de la barra)
+MSG
+}
+
+post_upgrade() {
+  systemctl --global enable puntero.service >/dev/null 2>&1 || true
+  echo "==> Reinicia el servicio para usar la versión nueva: systemctl --user restart puntero"
+}
+
+pre_remove() {
+  systemctl --global disable puntero.service >/dev/null 2>&1 || true
+  cat <<MSG
+==> Si algún botón con atajo deja de responder, apaga y enciende el ratón.
+    Si usas Omarchy y no ejecutaste puntero --reset, quita el plugin con:
+    rm ~/.config/omarchy/plugins/puntero.mouse && omarchy restart shell
+MSG
+}

@@ -11,7 +11,6 @@ SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DATA="${XDG_DATA_HOME:-$HOME/.local/share}"
 CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}"
 BIN="$HOME/.local/bin"
-PLUGIN_ID="puntero.mouse"
 
 say() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m==>\033[0m %s\n' "$*"; }
@@ -118,21 +117,6 @@ systemctl --user enable puntero.service >/dev/null 2>&1
 systemctl --user restart puntero.service
 
 # --- plugin de la barra de Omarchy ------------------------------------------
-if command -v omarchy >/dev/null && [[ -d "$CONFIG/omarchy" ]]; then
-  say "Instalando el plugin de la barra de Omarchy"
-  mkdir -p "$CONFIG/omarchy/plugins"
-  ln -sfn "$APPDIR/omarchy-plugin" "$CONFIG/omarchy/plugins/$PLUGIN_ID"
-  omarchy-shell shell rescanPlugins >/dev/null 2>&1 || true
-  sleep 1
-  if ! grep -q "\"$PLUGIN_ID\"" "$CONFIG/omarchy/shell.json" 2>/dev/null; then
-    omarchy bar put "$PLUGIN_ID" --after omarchy.bluetooth >/dev/null 2>&1 \
-      || omarchy bar put "$PLUGIN_ID" >/dev/null 2>&1 \
-      || warn "No se pudo añadir a la barra; hazlo con: omarchy bar put $PLUGIN_ID"
-  fi
-  # la recarga en caliente no reemplaza un widget ya montado
-  omarchy restart shell >/dev/null 2>&1 || true
-else
-  say "Omarchy no detectado: se omite el plugin de la barra"
-fi
+"$SRC/data/omarchy-plugin.sh" install "$APPDIR/omarchy-plugin"
 
 say "Listo. Abre Puntero desde el menú de apps o con: puntero"

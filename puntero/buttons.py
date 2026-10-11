@@ -11,11 +11,13 @@ Acciones guardadas en ~/.config/puntero/buttons.json:
     {"<id dispositivo>": {"<cid>": {"type": "keys", "codes": [29, 46], "label": "Ctrl+C"}}}
     {"type": "command", "command": "omarchy-capture-screenshot", "label": "..."}
     {"type": "dpi_cycle", "values": [800, 1600, 3200], "label": "800 · 1600 · 3200 DPI"}
+    {"type": "text", "text": "Saludos,\nLuis", "label": "Saludos, Luis"}
 """
 
 import json
 import logging
 import os
+import shutil
 import struct
 import subprocess
 import threading
@@ -57,6 +59,49 @@ class Keyboard:
                 dev.syn()
             except Exception:
                 logger.exception("no se pudo simular %s", codes)
+
+
+# Caracteres que se pueden escribir con uinput sin depender de la distribución del teclado
+_SAFE_KEYS = {**{c: (f"KEY_{c.upper()}", False) for c in "abcdefghijklmnopqrstuvwxyz"},
+              **{c: (f"KEY_{c}", False) for c in "abcdefghijklmnopqrstuvwxyz".upper()},
+              **{c: (f"KEY_{c}", False) for c in "0123456789"},
+              " ": ("KEY_SPACE", False), "\n": ("KEY_ENTER", False), "\t": ("KEY_TAB", False)}
+
+
+def type_text(text, keyboard):
+    """Escribe un texto como si se tecleara.
+
+    Con wtype (Wayland) o xdotool (X11) sale cualquier carácter (acentos, ñ, emojis…)
+    sea cual sea la distribución del teclado. Sin ellos se usa uinput, que solo puede
+    escribir letras sin acento, números, espacios y saltos de línea.
+    """
+    if os.environ.get("WAYLAND_DISPLAY") and shutil.which("wtype"):
+        cmd = ["wtype", "--", text]
+    elif os.environ.get("DISPLAY") and shutil.which("xdotool"):
+        cmd = ["xdotool", "type", "--clearmodifiers", "--", text]
+    else:
+        cmd = None
+    if cmd:
+        try:
+            subprocess.run(cmd, timeout=30, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+            return
+        except Exception:
+            logger.exception("no se pudo escribir el texto con %s", cmd[0])
+    import evdev
+
+    shift = evdev.ecodes.KEY_LEFTSHIFT
+    skipped = False
+    for ch in text:
+        key = _SAFE_KEYS.get(ch)
+        if key is None:
+            skipped = True
+            continue
+        code = evdev.ecodes.ecodes[key[0]]
+        codes = [shift, code] if ch.isupper() else [code]
+        keyboard.press(codes, True)
+        keyboard.press(codes, False)
+    if skipped:
+        logger.warning("sin wtype ni xdotool solo se escriben letras sin acento, números y espacios")
 
 
 class ButtonMapper:
@@ -151,6 +196,9 @@ class ButtonMapper:
             self.keyboard.press(action["codes"], down)
         elif action["type"] == "dpi_cycle" and down and self.on_dpi_cycle:
             self.on_dpi_cycle(dev, action["values"])
+        elif action["type"] == "text" and down:
+            # en otro hilo: escribir un texto largo no debe frenar los avisos del ratón
+            threading.Thread(target=type_text, args=(action["text"], self.keyboard), daemon=True).start()
         elif action["type"] == "command" and down:
             subprocess.Popen(["sh", "-c", action["command"]], start_new_session=True,
                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

@@ -14,6 +14,7 @@ Usa [Solaar](https://github.com/pwr-Solaar/Solaar) como motor y una interfaz GTK
 - **Botones a tu gusto**: cada botón puede ser
   - otro botón del ratón,
   - un **atajo de teclado** (una letra, `Ctrl+C`, `Ctrl+Shift+T`, teclas multimedia…),
+  - un **texto completo** que se escribe donde esté el cursor (un saludo, una firma, tu correo…),
   - un **comando**,
   - un **ciclo de DPI**: varios puntos preconfigurados que se recorren con cada pulsación
     (por ejemplo 800 → 1600 → 3200), con aviso en pantalla.
@@ -24,9 +25,16 @@ Usa [Solaar](https://github.com/pwr-Solaar/Solaar) como motor y una interfaz GTK
 - Funciona en Wayland y X11 y con cualquier escritorio (GNOME, KDE, Hyprland, Sway…).
 - Compatible con la configuración de Solaar: comparten el mismo archivo de ajustes.
 
-| Atajos de teclado | Ciclo de DPI |
-|---|---|
-| ![Editor de atajos](docs/captura-keys.png) | ![Puntos de DPI](docs/captura-dpi.png) |
+| Atajos de teclado | Texto en un botón | Ciclo de DPI |
+|---|---|---|
+| ![Editor de atajos](docs/captura-keys.png) | ![Texto en un botón](docs/captura-texto.png) | ![Puntos de DPI](docs/captura-dpi.png) |
+
+### Plugin para la barra de Omarchy
+
+<img src="docs/captura-barra.png" alt="Panel de Puntero en la barra de Omarchy" width="360">
+
+Batería en la barra y, con un clic, un panel con la sensibilidad, lo que hace cada botón y el
+equipo conectado por Easy-Switch.
 
 ## Requisitos
 
@@ -35,11 +43,26 @@ Usa [Solaar](https://github.com/pwr-Solaar/Solaar) como motor y una interfaz GTK
   algo podría fallar, y el instalador avisa).
 - **GTK 4** y **libadwaita 1.7 o superior** (Arch, Fedora 42+, Ubuntu 25.04+…).
 - **python-evdev** (para simular las teclas de los atajos).
+- Opcional: **wtype** (Wayland) o **xdotool** (X11) para escribir textos con acentos, ñ y
+  símbolos desde un botón. Sin ellos solo se escriben letras sin acento, números y espacios.
 
 Probado con un Logitech **LIFT** por Bluetooth. Debería funcionar con cualquier dispositivo que
 Solaar reconozca; si lo pruebas con otro modelo, cuéntalo en un *issue*.
 
 ## Instalación
+
+### Arch Linux y derivadas (AUR)
+
+```
+yay -S puntero
+puntero --setup
+```
+
+`puntero --setup` arranca el servicio y, si usas Omarchy, pone el plugin en la barra. Después
+apaga y enciende el ratón para que se apliquen los permisos de Solaar. Antes de desinstalar el
+paquete, ejecuta `puntero --reset` para devolver los botones a su función original.
+
+### Cualquier distribución (instalador)
 
 1. Instala las dependencias. El instalador te dice el comando exacto para tu distribución
    (`pacman`, `apt`, `dnf` o `zypper`) si falta algo. En Arch, por ejemplo:
@@ -84,6 +107,12 @@ sesión).
 Si Hyprland u otro escritorio se queda una combinación con **Super** antes de que Puntero la vea,
 activa el botón **Super** en el editor y graba solo la otra tecla.
 
+### Texto en un botón
+
+En la pestaña **Texto** del editor del botón escribe lo que quieras que salga al pulsarlo; puede
+tener varias líneas. Se escribe donde esté el cursor, como si lo teclearas. Con **wtype** o
+**xdotool** instalado sale cualquier carácter, sea cual sea la distribución de tu teclado.
+
 ### Imágenes propias
 
 Puntero incluye ilustraciones propias. Si quieres ver la foto de tu ratón, guárdala como
@@ -110,7 +139,9 @@ conservan y se vuelven a aplicar solos si reinstalas.
   simuladas con uinput). Se guardan en `~/.config/puntero/buttons.json`.
 - `puntero/i18n.py`: textos en español; el servicio los aplica antes de enviar los datos.
 - `puntero/app.py`: la interfaz GTK4; si el servicio no está en marcha, lo arranca.
-- `omarchy-plugin/`: widget de barra para Omarchy (QML), conectado al mismo socket.
+- `omarchy-plugin/`: widget de barra para Omarchy (QML), conectado al mismo socket;
+  `data/omarchy-plugin.sh` lo pone o lo quita de la barra.
+- `packaging/aur/`: `PKGBUILD` del paquete de AUR.
   Tras editar su QML hace falta `omarchy restart shell`.
 - Los ajustes del ratón se guardan en `~/.config/solaar/config.yaml`, el mismo archivo que usa Solaar.
 

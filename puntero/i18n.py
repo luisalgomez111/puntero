@@ -99,3 +99,9 @@ def code_label(code):
     if isinstance(name, (list, tuple)):  # alias: preferir el que tiene nombre propio
         name = next((n for n in name if n in KEY_NAMES), name[-1])
     return key_label(name)
+
+
+def text_label(text, limit=32):
+    """Resumen de una línea para mostrar un texto guardado en un botón."""
+    flat = " ".join(text.split())
+    return flat if len(flat) <= limit else flat[: limit - 1] + "…"

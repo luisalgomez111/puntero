@@ -94,6 +94,7 @@ Panel {
     var a = b.action
     if (a && a.type === "keys") return (a.names || [a.label]).join(" + ")
     if (a && a.type === "command") return a.label
+    if (a && a.type === "text") return "“" + a.label + "”"
     if (a && a.type === "dpi_cycle") return a.values.join(" · ") + " DPI"
     if (b.remap !== null && b.remap !== undefined && b.remap !== b.cid) {
       for (var i = 0; i < b.remap_choices.length; i++)
@@ -105,6 +106,11 @@ Panel {
   function hostName(choice) {
     var parts = String(choice.label).split(" · ")
     return parts.length > 1 ? parts.slice(1).join(" · ") : choice.label
+  }
+
+  // instalado con ./install.sh queda en ~/.local/bin; desde el paquete, en /usr/bin
+  function openApp() {
+    Quickshell.execDetached(["sh", "-c", "PATH=\"$HOME/.local/bin:$PATH\" exec puntero"])
   }
 
   function send(obj) {
@@ -208,7 +214,7 @@ Panel {
     slotSize: Style.bar.iconSlot * (root.showPercentage && root.batteryLevel >= 0 && !vertical ? 2.4 : 1)
     tooltipText: root.device ? root.shortName(root.device) + (root.batteryLevel >= 0 ? " · " + root.batteryLevel + "%" : "") : ""
     onPressed: function(b) {
-      if (b === Qt.RightButton) Quickshell.execDetached([Quickshell.env("HOME") + "/.local/bin/puntero"])
+      if (b === Qt.RightButton) root.openApp()
       else root.toggle()
     }
   }
@@ -546,7 +552,7 @@ Panel {
           fontFamily: root.fontFamily
           bordered: true
           onClicked: {
-            Quickshell.execDetached([Quickshell.env("HOME") + "/.local/bin/puntero"])
+            root.openApp()
             root.close()
           }
         }
