@@ -11,7 +11,7 @@ optdepends=('wtype: escribir textos con acentos y símbolos desde un botón (Way
             'xdotool: escribir textos con acentos y símbolos desde un botón (X11)')
 install=puntero.install
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('SKIP')
+sha256sums=('1384c6f1bb9b6546b695e22e293f9ec69f39429b1884d11e4725234f8f42b9de')
 
 package() {
   cd "$pkgname-$pkgver"
